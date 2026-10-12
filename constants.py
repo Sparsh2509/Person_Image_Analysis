@@ -2,6 +2,15 @@
 
 from typing import List, Dict
 
+# 0. Skin Tone (Allowed Values - Exactly 1 value)
+VALID_SKIN_TONES: List[str] = [
+    "Fair",
+    "Light",
+    "Wheatish",
+    "Dusky",
+    "Deep",
+]
+
 # 1. Face Shape (Allowed Values)
 VALID_FACE_SHAPES: List[str] = [
     "Oval",
@@ -84,11 +93,22 @@ COLOR_SWATCHES: Dict[str, Dict[str, str]] = {
 }
 
 # Lookup dictionaries for case-insensitive normalization
+_SKIN_TONE_LOOKUP = {item.lower(): item for item in VALID_SKIN_TONES}
 _FACE_SHAPE_LOOKUP = {item.lower(): item for item in VALID_FACE_SHAPES}
 _BODY_TYPE_LOOKUP = {item.lower(): item for item in VALID_BODY_TYPES}
 _COLOR_LOOKUP = {item.lower(): item for item in VALID_RECOMMENDED_COLORS}
 _STYLE_LOOKUP = {item.lower(): item for item in VALID_RECOMMENDED_STYLES}
 _HAIRSTYLE_LOOKUP = {item.lower(): item for item in VALID_HAIRSTYLES}
+
+
+def normalize_skin_tone(val) -> str:
+    """Normalizes to exactly 1 valid skin tone string."""
+    if isinstance(val, list) and len(val) > 0:
+        val = val[0]
+    if not isinstance(val, str):
+        return "Wheatish"
+    cleaned = val.strip().lower()
+    return _SKIN_TONE_LOOKUP.get(cleaned, "Wheatish")
 
 
 def normalize_face_shape(val: str) -> str:
@@ -112,9 +132,7 @@ def filter_colors(colors: List[str]) -> List[str]:
             if canonical and canonical not in seen:
                 seen.add(canonical)
                 res.append(canonical)
-    # Ensure between 3 and 5 colors
     if len(res) < 3:
-        # Fallback safe defaults if model provided fewer
         defaults = ["Navy Blue", "White", "Black"]
         for d in defaults:
             if d not in seen and len(res) < 3:

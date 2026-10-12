@@ -6,7 +6,6 @@ from PIL import Image
 from constants import COLOR_SWATCHES
 from analyzer import analyze_person_photo, get_groq_api_keys
 
-# Page Config
 st.set_page_config(
     page_title="FestFit — Personal Fashion Profile",
     page_icon="✨",
@@ -14,11 +13,9 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# Custom Styling for Cards, Swatches, and Tags
 st.markdown(
     """
     <style>
-    /* Card Container */
     .profile-card {
         background: #FFFFFF;
         border: 1px solid #E5E7EB;
@@ -45,8 +42,6 @@ st.markdown(
         color: #6B7280;
         margin-top: 2px;
     }
-
-    /* Color Swatch Pill */
     .swatches-container {
         display: flex;
         flex-wrap: wrap;
@@ -69,8 +64,6 @@ st.markdown(
         border-radius: 50%;
         display: inline-block;
     }
-
-    /* Style & Hairstyle Tags */
     .tags-container {
         display: flex;
         flex-wrap: wrap;
@@ -100,22 +93,17 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Header
 st.title("✨ FestFit — Personal AI Fashion Analysis")
 st.markdown(
     "Upload your photo to discover your personalized fashion profile: **Face Shape**, **Body Silhouette**, "
-    "**Complimentary Colors**, **Recommended Styles**, and **Hairstyles**."
+    "**Skin Tone**, **Complimentary Colors**, **Recommended Styles**, and **Hairstyles**."
 )
 st.divider()
 
-# Check API Key status
 api_keys = get_groq_api_keys()
 if not api_keys:
-    st.warning(
-        "⚠️ No Groq API Key found. Please add `GROQ_API_KEY_1` or `GROQ_API_KEY` to your `.env` file to enable analysis."
-    )
+    st.warning("⚠️ No Groq API Key found. Please add `GROQ_API_KEY_1` or `GROQ_API_KEY` to your `.env` file.")
 
-# Layout: 2 Columns (Upload & Preview on Left, Results on Right)
 col_left, col_right = st.columns([1, 1.3], gap="large")
 
 with col_left:
@@ -141,7 +129,6 @@ with col_left:
             if analyze_button:
                 with st.spinner("Analyzing your face shape, features, and color harmony with AI..."):
                     try:
-                        # Reset file pointer to beginning
                         uploaded_file.seek(0)
                         results = analyze_person_photo(uploaded_file)
                         st.session_state["analysis_results"] = results
@@ -154,7 +141,6 @@ with col_left:
 
     else:
         st.info("💡 Upload a photo above to begin. You can upload either a close-up portrait or a full-body picture.")
-        # Clear previous session state on file removal
         if "analysis_results" in st.session_state:
             del st.session_state["analysis_results"]
 
@@ -195,7 +181,20 @@ with col_right:
             unsafe_allow_html=True,
         )
 
-        # Card 3: Recommended Colors (with Visual Colored Swatches)
+        # Card 3: Skin Tone (Single String Value)
+        skin_tone = res.get("skin_tone", "Wheatish")
+        st.markdown(
+            f"""
+            <div class="profile-card">
+                <div class="profile-card-title">✨ Skin Tone</div>
+                <div class="profile-card-value">{skin_tone}</div>
+                <div class="profile-card-subtitle">Identified based on facial complexion and natural undertones.</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        # Card 4: Recommended Colors
         colors = res.get("recommended_colors", [])
         swatches_html = ""
         for color_name in colors:
@@ -221,7 +220,7 @@ with col_right:
             unsafe_allow_html=True,
         )
 
-        # Card 4: Recommended Styles
+        # Card 5: Recommended Styles
         styles = res.get("recommended_styles", [])
         styles_html = "".join([f'<span class="style-tag">{style}</span>' for style in styles])
         st.markdown(
@@ -235,7 +234,7 @@ with col_right:
             unsafe_allow_html=True,
         )
 
-        # Card 5: Hairstyle Suggestions
+        # Card 6: Hairstyle Suggestions
         hairstyles = res.get("hairstyle_suggestions", [])
         hair_html = "".join([f'<span class="hair-tag">{hair}</span>' for hair in hairstyles])
         st.markdown(
@@ -249,7 +248,6 @@ with col_right:
             unsafe_allow_html=True,
         )
 
-        # Expandable JSON
         with st.expander("📋 View Structured Profile Data (JSON)"):
             st.json(res)
 
